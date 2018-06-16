@@ -8,6 +8,10 @@
     authors and labels:
     Sara has label 0
     Chris has label 1
+
+    t0 = time()
+	< your clf.fit() line of code >
+	print "training time:", round(time()-t0, 3), "s"
 """
     
 import sys
@@ -16,18 +20,37 @@ sys.path.append("../tools/")
 from email_preprocess import preprocess
 
 
+
 ### features_train and features_test are the features for the training
 ### and testing datasets, respectively
 ### labels_train and labels_test are the corresponding item labels
+
+#######################################################################
+
+from sklearn.naive_bayes import GaussianNB
+
 features_train, features_test, labels_train, labels_test = preprocess()
+clf = GaussianNB()
+t0 = time()
+clf.fit(features_train,labels_train)
+print "training time:", round(time()-t0, 3), "s"
 
+t0 = time()
+score = clf.score(features_test,labels_test)
+print "testing time:", round(time()-t0, 3), "s"
 
+print "accuracy:",score
 
+########################################################################
 
-#########################################################
-### your code goes here ###
+''' 
+	from wordcloud import WordCloud
+	import matplotlib.pyplot as plt
 
-
-#########################################################
-
-
+	wc = WordCloud(width=512,height = 512).generate(features_test)
+	plt.figure(figsize = (10,8), facecolor = 'k')
+	plt.imshow(wc)
+	plt.axis('off')
+	plt.tight_layout(pad = 0)
+	plt.show()
+'''
