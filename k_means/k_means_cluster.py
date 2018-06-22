@@ -59,6 +59,7 @@ poi, finance_features = targetFeatureSplit( data )
 ### you'll want to change this line to 
 ### for f1, f2, _ in finance_features:
 ### (as it's currently written, the line below assumes 2 features)
+
 for f1, f2, _ in finance_features:
     plt.scatter( f1, f2 )
 plt.show()
@@ -75,39 +76,79 @@ pred = km.labels_
 
 ### rename the "name" parameter when you change the number of features
 ### so that the figure gets saved to a different file
+
 try:
-    Draw(pred, finance_features, poi, mark_poi=False, name="clusters2.pdf", f1_name=feature_1, f2_name=feature_2)
+    Draw(pred, finance_features, poi, mark_poi=False, name="tempclusters1.pdf", f1_name=feature_1, f2_name=feature_2)
 except NameError:
     print "no predictions object named pred found, no clusters to plot"
 
 
 ### Sneak Preview
 ### For exercised_stock_options
-minVal = 0
-maxVal = 0
+minValStock = 0
+maxValStock = 0
 for person in data_dict:
 	if data_dict[person]["exercised_stock_options"] != "NaN":
-		if minVal == 0 and maxVal == 0:
-			minVal = data_dict[person]["exercised_stock_options"]
-			maxVal = data_dict[person]["exercised_stock_options"]
-		elif minVal > data_dict[person]["exercised_stock_options"]:
-			minVal = data_dict[person]["exercised_stock_options"]
-		elif maxVal < data_dict[person]["exercised_stock_options"] :
-			maxVal = data_dict[person]["exercised_stock_options"]
+		if minValStock == 0 and maxValStock == 0:
+			minValStock = data_dict[person]["exercised_stock_options"]
+			maxValStock = data_dict[person]["exercised_stock_options"]
+		elif minValStock > data_dict[person]["exercised_stock_options"]:
+			minValStock = data_dict[person]["exercised_stock_options"]
+		elif maxValStock < data_dict[person]["exercised_stock_options"] :
+			maxValStock = data_dict[person]["exercised_stock_options"]
 
-print "exercised_stock_options -> minVal =", minVal, " & maxVal =", maxVal
+print "exercised_stock_options -> minVal =", minValStock, " & maxVal =", maxValStock
 
 ### For salary
-minVal = 0
-maxVal = 0
+minValSal = 0
+maxValSal = 0
 for person in data_dict:
 	if data_dict[person]["salary"] != "NaN":
-		if minVal == 0 and maxVal == 0:
-			minVal = data_dict[person]["salary"]
-			maxVal = data_dict[person]["salary"]
-		elif minVal > data_dict[person]["salary"]:
-			minVal = data_dict[person]["salary"]
-		elif maxVal < data_dict[person]["salary"] :
-			maxVal = data_dict[person]["salary"]
+		if minValSal == 0 and maxValSal == 0:
+			minValSal = data_dict[person]["salary"]
+			maxValSal = data_dict[person]["salary"]
+		elif minValSal > data_dict[person]["salary"]:
+			minValSal = data_dict[person]["salary"]
+		elif maxValSal < data_dict[person]["salary"] :
+			maxValSal = data_dict[person]["salary"]
 
-print "salary -> minVal =", minVal, " & maxVal =", maxVal
+print "salary -> minVal =", minValSal, " & maxVal =", maxValSal
+
+### Feature Scaling
+
+from sklearn.preprocessing import MinMaxScaler
+
+salArray = []
+stockArray = []
+for f1,f2,_ in finance_features:
+	### Ignoring Zero Items
+	#if f1 != 0.0 and f2 != 0.0:
+	#	salArray.append(float(f1))
+	#	stockArray.append(float(f2))
+	salArray.append(float(f1))
+	stockArray.append(float(f2))
+
+salArray = numpy.array([salArray])
+stockArray = numpy.array([stockArray])
+salArray = salArray.reshape((salArray.size,1))
+stockArray = stockArray.reshape((salArray.size,1))
+
+salScale = MinMaxScaler()
+stockScale = MinMaxScaler()
+
+salArray = salScale.fit_transform(salArray)
+stockArray = stockScale.fit_transform(stockArray)
+
+print "New values for Sal = $200,000 and Stock = $1,000,000: ", salScale.transform([[200000]]), " and ", stockScale.transform([[1000000]])
+
+rescaled_finance_features = numpy.array([salArray.ravel(), stockArray.ravel()]).reshape((len(salArray), 2), order = 'F')
+
+for f1,f2 in rescaled_finance_features:
+	plt.scatter(f1,f2)
+plt.show()
+
+km = KMeans(n_clusters = 2)
+km.fit(rescaled_finance_features)
+pred = km.labels_
+
+Draw(pred, rescaled_finance_features , poi, mark_poi=False, name="tempclusters2.pdf", f1_name=feature_1, f2_name=feature_2)
