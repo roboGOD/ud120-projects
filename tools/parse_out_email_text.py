@@ -2,6 +2,7 @@
 
 from nltk.stem.snowball import SnowballStemmer
 import string
+import re
 
 def parseOutText(f):
     """ given an opened email file f, parse out all text below the
@@ -28,14 +29,22 @@ def parseOutText(f):
         text_string = content[1].translate(string.maketrans("", ""), string.punctuation)
 
         ### project part 2: comment out the line below
-        words = text_string
+        #words = text_string
 
         ### split the text string into individual words, stem each word,
         ### and append the stemmed word to words (make sure there's a single
         ### space between each stemmed word)
-        
 
+        text_string = re.sub('\r?\n', ' ', text_string)
+        stem_words = text_string.split()
+        stemmer = SnowballStemmer("english")
+        for i in range(len(stem_words)):
+            #stem_words[i] = stem_words[i].replace("\r\n", " ")
+            stem_words[i] = stemmer.stem(stem_words[i])
+            #stem_words[i] = stem_words[i].strip()
 
+        words = ' '.join(stem_words)
+        words = re.sub(' +', ' ', words)
 
 
     return words

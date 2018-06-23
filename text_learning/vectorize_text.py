@@ -41,25 +41,42 @@ for name, from_person in [("sara", from_sara), ("chris", from_chris)]:
     for path in from_person:
         ### only look at first 200 emails when developing
         ### once everything is working, remove this line to run over full dataset
-        temp_counter += 1
+        #temp_counter += 1
         if temp_counter < 200:
+            #print path[:-1]
             path = os.path.join('..', path[:-1])
-            print path
+            #print name, "\t", path
             email = open(path, "r")
 
             ### use parseOutText to extract the text from the opened email
+            text = parseOutText(email)
 
             ### use str.replace() to remove any instances of the words
             ### ["sara", "shackleton", "chris", "germani"]
 
+            listReplace = ["sara", "shackleton", "chris", "germani"]
+            for i in listReplace:
+                text = text.replace(i,"")
+
             ### append the text to word_data
+
+            word_data.append(text)
 
             ### append a 0 to from_data if email is from Sara, and 1 if email is from Chris
 
+            if name == "sara":
+                from_data.append(0)
+            elif name == "chris":
+                from_data.append(1)
+            else:
+                print "Name not found:: ", name
 
             email.close()
 
 print "emails processed"
+print "word_data[152]:", word_data[152]
+
+
 from_sara.close()
 from_chris.close()
 
@@ -72,4 +89,15 @@ pickle.dump( from_data, open("your_email_authors.pkl", "w") )
 
 ### in Part 4, do TfIdf vectorization here
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+#vect = TfidfVectorizer(stop_words = 'english', lowercase = True)
+vect = TfidfVectorizer(stop_words = 'english')
+transformed = vect.fit_transform(word_data)
+idf = vect.idf_
+
+#print dict(zip(vect.get_feature_names(), idf))
+print "Number of unique words:", len(vect.get_feature_names())
+#print "Supposed Answer: 38757\n"
+print "Word at 34597 is", vect.get_feature_names()[34597]
 
