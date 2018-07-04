@@ -10,14 +10,31 @@ from tester import dump_classifier_and_data
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-features_list = ['poi','salary'] # You will need to use more features
+
+#features_list = ['poi','salary', 'bonus'] # You will need to use more features
+
+features_list = ['poi', 'salary', 'bonus', 'deferral_payments','total_payments','exercised_stock_options',
+'restricted_stock','shared_receipt_with_poi','restricted_stock_deferred','total_stock_value','expenses','loan_advances',
+'from_this_person_to_poi','director_fees','deferred_income','long_term_incentive','from_poi_to_this_person']
+
+# Ambiguous:: loan_advances, salary, bonus
+
+#features_list = ['poi','total_payments','exercised_stock_options',
+#'total_stock_value', 'from_this_person_to_poi', 'from_poi_to_this_person', 'shared_receipt_with_poi']
+
+
+
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
 ### Task 2: Remove outliers
+data_dict.pop("TOTAL",0)
+
 ### Task 3: Create new feature(s)
+
+
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict
 
@@ -33,7 +50,21 @@ labels, features = targetFeatureSplit(data)
 
 # Provided to give you a starting point. Try a variety of classifiers.
 from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()
+from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline
+
+n_comp = 2
+esitmators = [('reduce_dim', PCA(n_components=n_comp)), ('clf1', GaussianNB())]
+clf = Pipeline(esitmators)
+
+'''
+from sklearn.svm import SVC
+from sklearn.model_selection import GridSearchCV
+
+param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5],
+              'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }
+clf = GridSearchCV(SVC(kernel = 'rbf'), param_grid)
+'''
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
@@ -43,9 +74,50 @@ clf = GaussianNB()
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
 
 # Example starting point. Try investigating other evaluation techniques!
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 features_train, features_test, labels_train, labels_test = \
     train_test_split(features, labels, test_size=0.3, random_state=42)
+
+clf.fit(features_train, labels_train)
+predictions = clf.predict(features_test)
+true_negatives = 0
+false_negatives = 0
+true_positives = 0
+false_positives = 0
+for prediction, truth in zip(predictions, labels_test):
+    if prediction == 0 and truth == 0:
+        true_negatives += 1
+    elif prediction == 0 and truth == 1:
+        false_negatives += 1
+    elif prediction == 1 and truth == 0:
+        false_positives += 1
+    elif prediction == 1 and truth == 1:
+        true_positives += 1
+    else:
+        print "Warning: Found a predicted label not == 0 or 1."
+        print "All predictions should take value 0 or 1."
+        print "Evaluating performance for processed predictions:"
+        break
+
+PERF_FORMAT_STRING = "\
+\nAccuracy: {:>0.{display_precision}f}\nPrecision: {:>0.{display_precision}f}\n\
+Recall: {:>0.{display_precision}f}\nF1: {:>0.{display_precision}f}\nF2: {:>0.{display_precision}f}"
+#RESULTS_FORMAT_STRING = "\nTotal predictions: {:4d}\nTrue positives: {:4d}\nFalse positives: {:4d}\n\
+#False negatives: {:4d}\nTrue negatives: {:4d}"
+try:
+    total_predictions = true_negatives + false_negatives + false_positives + true_positives
+    accuracy = 1.0*(true_positives + true_negatives)/total_predictions
+    precision = 1.0*true_positives/(true_positives+false_positives)
+    recall = 1.0*true_positives/(true_positives+false_negatives)
+    f1 = 2.0 * true_positives/(2*true_positives + false_positives+false_negatives)
+    f2 = (1+2.0*2.0) * precision*recall/(4*precision + recall)
+    print clf
+    print PERF_FORMAT_STRING.format(accuracy, precision, recall, f1, f2, display_precision = 5)
+    #print RESULTS_FORMAT_STRING.format(total_predictions, true_positives, false_positives, false_negatives, true_negatives)
+    print ""
+except:
+    print "Got a divide by zero when trying out:", clf
+    print "Precision or recall may be undefined due to a lack of true positive predicitons."
 
 ### Task 6: Dump your classifier, dataset, and features_list so anyone can
 ### check your results. You do not need to change anything below, but make sure
