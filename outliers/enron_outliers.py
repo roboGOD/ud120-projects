@@ -16,12 +16,19 @@ data = featureFormat(data_dict, features)
 
 
 ### your code below
-
+### Visualize Bonus and Salary
 for point in data:
     salary = point[0]
     bonus = point[1]
     plt.scatter( salary, bonus , color = "b", marker = "o")
 
+plt.xlabel("salary")
+plt.ylabel("bonus")
+plt.show()
+
+
+
+### Printing Top 4 Persons with respect to Bonus and Salary
 num = 4
 listMax = []
 for person in data_dict:
@@ -30,12 +37,8 @@ for person in data_dict:
 	if data_dict[person]["bonus"] != "NaN" and data_dict[person]["salary"] != "NaN":
 		listMax.append((person, data_dict[person]["bonus"], data_dict[person]["salary"]))
 
+### Sorting By Bonus
 listMax = sorted(listMax, key= itemgetter(1), reverse = True)
 print "List of", num, "Persons (Person Name, Bonus, Salary)"
 for t in listMax[:num]:
 	print t
-
-plt.xlabel("salary")
-plt.ylabel("bonus")
-plt.show()
-
