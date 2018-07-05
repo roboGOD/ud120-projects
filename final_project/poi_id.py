@@ -2,6 +2,7 @@
 
 import sys
 import pickle
+from time import time
 sys.path.append("../tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
@@ -49,22 +50,45 @@ labels, features = targetFeatureSplit(data)
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
 # Provided to give you a starting point. Try a variety of classifiers.
+
 from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import GridSearchCV
+from sklearn.neural_network import MLPClassifier
+
 
 n_comp = 2
-esitmators = [('reduce_dim', PCA(n_components=n_comp)), ('clf1', GaussianNB())]
-clf = Pipeline(esitmators)
+classifier = GaussianNB()
+classifier_name = 'gnb'
+estimators = [('reduce_dim', PCA(n_components=n_comp)), (classifier_name, classifier)]
+pipe = Pipeline(estimators)
 
-'''
-from sklearn.svm import SVC
-from sklearn.model_selection import GridSearchCV
 
-param_grid = {'C': [1e3, 5e3, 1e4, 5e4, 1e5],
-              'gamma': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1], }
-clf = GridSearchCV(SVC(kernel = 'rbf'), param_grid)
-'''
+### Parameters for MLPClassifier
+#pipe.set_params(mlp__alpha=1e-5, mlp__hidden_layer_sizes=(5, 2), mlp__max_iter=10000)
+
+### Parameters for RandomForestClassifier
+#pipe.set_params(rfc__min_samples_split=50, rfc__n_estimators=100)
+
+### Parameters for DecisionTreeClassifier
+#pipe.set_params(dtc__min_samples_split=20)
+
+### Parameters for SVC
+#param_grid = dict(svc__C=[1,10,100,1000,10000],svc__gamma=[0.0001,0.001,0.01,0.1,0.5,1])
+#clf = GridSearchCV(pipe, param_grid)
+
+### Parameters for AdaBoostClassifier
+#pipe.set_params(adb__n_estimators=50)
+
+clf = pipe
+
+
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script. Check the tester.py script in the final project
@@ -78,8 +102,12 @@ from sklearn.model_selection import train_test_split
 features_train, features_test, labels_train, labels_test = \
     train_test_split(features, labels, test_size=0.3, random_state=42)
 
+t0 = time()
 clf.fit(features_train, labels_train)
+print "Time Taken For Training:", round(time()-t0,3)
+t0 = time()
 predictions = clf.predict(features_test)
+print "Time Taken For Predictions:", round(time()-t0,3),"\n"
 true_negatives = 0
 false_negatives = 0
 true_positives = 0
