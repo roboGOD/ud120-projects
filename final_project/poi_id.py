@@ -12,17 +12,16 @@ from tester import dump_classifier_and_data
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
 
-#features_list = ['poi','salary', 'bonus'] # You will need to use more features
+### You will need to use more features
 
-features_list = ['poi', 'salary', 'bonus', 'deferral_payments','total_payments','exercised_stock_options',
-'restricted_stock','shared_receipt_with_poi','restricted_stock_deferred','total_stock_value','expenses','loan_advances',
-'from_this_person_to_poi','director_fees','deferred_income','long_term_incentive','from_poi_to_this_person']
+#features_list = ['poi', 'salary', 'bonus', 'deferral_payments','total_payments','exercised_stock_options',
+#'restricted_stock','shared_receipt_with_poi','restricted_stock_deferred','total_stock_value','expenses','loan_advances',
+#'from_this_person_to_poi','director_fees','deferred_income','long_term_incentive','from_poi_to_this_person']
 
-# Ambiguous:: loan_advances, salary, bonus
-
-#features_list = ['poi','total_payments','exercised_stock_options',
-#'total_stock_value', 'from_this_person_to_poi', 'from_poi_to_this_person', 'shared_receipt_with_poi']
-
+### Best Features 
+features_list = ['poi', 'salary', 'bonus', 'total_payments', 'exercised_stock_options',
+'expenses', 'director_fees','restricted_stock_deferred',
+'from_this_person_to_poi','deferred_income','long_term_incentive','from_poi_to_this_person']
 
 
 
@@ -63,7 +62,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
 
 
-n_comp = 2
+n_comp = 7
 classifier = GaussianNB()
 classifier_name = 'gnb'
 estimators = [('reduce_dim', PCA(n_components=n_comp)), (classifier_name, classifier)]
