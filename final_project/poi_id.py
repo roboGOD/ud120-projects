@@ -16,12 +16,11 @@ from tester import dump_classifier_and_data
 
 #features_list = ['poi', 'salary', 'bonus', 'deferral_payments','total_payments','exercised_stock_options',
 #'restricted_stock','shared_receipt_with_poi','restricted_stock_deferred','total_stock_value','expenses','loan_advances',
-#'from_this_person_to_poi','director_fees','deferred_income','long_term_incentive','from_poi_to_this_person']
+#'from_this_person_to_poi','director_fees','deferred_income','long_term_incentive','from_poi_to_this_person','other']
 
-### Best Features 
+### Best Features for Balanced Precision and Recall 
 features_list = ['poi', 'salary', 'bonus', 'total_payments', 'exercised_stock_options',
-'expenses', 'director_fees','restricted_stock_deferred',
-'from_this_person_to_poi','deferred_income','long_term_incentive','from_poi_to_this_person']
+'expenses','deferred_income','long_term_incentive', 'poi_interactions', 'shared_receipt_with_poi']
 
 
 
@@ -33,6 +32,62 @@ with open("final_project_dataset.pkl", "r") as data_file:
 data_dict.pop("TOTAL",0)
 
 ### Task 3: Create new feature(s)
+#import numpy as np 
+to_pois = []
+from_pois = []
+for key in data_dict:
+    #print "\n",key, "\n"
+    for feature in data_dict[key]:
+        #print "\t",feature,":",data_dict[key][feature]
+        if data_dict[key][feature] < 0:
+            data_dict[key][feature] = (-1)*data_dict[key][feature]
+
+
+    from_poi = data_dict[key]['from_poi_to_this_person']
+    to_poi = data_dict[key]['from_this_person_to_poi']
+    total_to = data_dict[key]['from_messages']
+    total_from = data_dict[key]['to_messages']
+
+
+    if from_poi == "NaN":
+        from_poi = 0
+    if to_poi == "NaN":
+        to_poi = 0
+    if total_to == "NaN" or total_to == 0:
+        total_to = 1
+        to_poi = 0
+    if total_from == "NaN" or total_from == 0:
+        total_from = 1
+        from_poi = 0
+
+    to_ratio = float(to_poi)/ float(total_to)
+    from_ratio = float(from_poi) / float(total_from)
+
+    to_pois.append([to_ratio])
+    from_pois.append([from_ratio])
+
+    data_dict[key]['from_this_person_to_poi_ratio'] = to_ratio
+    data_dict[key]['from_poi_to_this_person_ratio'] = from_ratio
+
+    #print to_poi, ":", to_ratio
+    #print from_poi, ":", from_ratio
+
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+transformed_to_pois = scaler.fit_transform(to_pois)
+scaler = MinMaxScaler()
+transformed_from_pois = scaler.fit_transform(from_pois)
+
+i = 0
+for key in data_dict:
+
+    poi_interactions = transformed_from_pois[i][0] + transformed_to_pois[i][0]
+    i += 1
+    data_dict[key]['poi_interactions'] = poi_interactions
+
+
+
+
 
 
 ### Store to my_dataset for easy export below.
@@ -55,14 +110,23 @@ from sklearn.svm import SVC
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import GridSearchCV
-from sklearn.neural_network import MLPClassifier
+#from sklearn.linear_model import LogisticRegression
+#from sklearn.model_selection import GridSearchCV
+#from sklearn.neural_network import MLPClassifier
 
 
-n_comp = 7
+
+
+################################################################
+### Trying Various Classifiers
+
+#clf = DecisionTreeClassifier(min_samples_split = 2, max_depth = 11)
+
+
+
+n_comp = 5
 classifier = GaussianNB()
 classifier_name = 'gnb'
 estimators = [('reduce_dim', PCA(n_components=n_comp)), (classifier_name, classifier)]
@@ -70,17 +134,20 @@ pipe = Pipeline(estimators)
 
 
 ### Parameters for MLPClassifier
-#pipe.set_params(mlp__alpha=1e-5, mlp__hidden_layer_sizes=(5, 2), mlp__max_iter=10000)
+#pipe.set_params(mlp__alpha=1e-5, mlp__hidden_layer_sizes=(5,2), mlp__max_iter=10000)
 
 ### Parameters for RandomForestClassifier
 #pipe.set_params(rfc__min_samples_split=50, rfc__n_estimators=100)
 
 ### Parameters for DecisionTreeClassifier
-#pipe.set_params(dtc__min_samples_split=20)
+#pipe.set_params(dtc__min_samples_split=2, dtc__max_depth = 5)
 
-### Parameters for SVC
-#param_grid = dict(svc__C=[1,10,100,1000,10000],svc__gamma=[0.0001,0.001,0.01,0.1,0.5,1])
+### Parameters for SVC kernel = 'rbf'
+#param_grid = dict(svc__C=[1,10,100,1000,10000],svc__gamma=[0.0001,0.001,0.01,0.1,0.5,1], svc__kernel = ['poly','rbf'])
 #clf = GridSearchCV(pipe, param_grid)
+
+### Parameters for Linear SVC
+#pipe.set_params(svc__kernel='linear')
 
 ### Parameters for AdaBoostClassifier
 #pipe.set_params(adb__n_estimators=50)
