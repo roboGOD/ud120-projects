@@ -7,6 +7,7 @@ sys.path.append("../tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data
+from poi_email_preprocess import dump_email_data
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
@@ -27,6 +28,11 @@ features_list = ['poi', 'salary', 'bonus', 'total_payments', 'exercised_stock_op
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
+
+### Fetch and Preprocess Email Data
+dump_email_data(data_dict)
+
+
 
 ### Task 2: Remove outliers
 data_dict.pop("TOTAL",0)
