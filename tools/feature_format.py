@@ -48,8 +48,13 @@ def featureFormat( dictionary, features, remove_NaN=True, remove_all_zeroes=True
             removal for zero or missing values.
     """
 
-
     return_list = []
+    wordsThere = False
+    for j,i in enumerate(features):
+        if i == 'word_data':
+            wordsThere = True
+            del features[j]
+            break
 
     # Key order - first branch is for Python 3 compatibility on mini-projects,
     # second branch is for compatibility on final project.
@@ -97,6 +102,15 @@ def featureFormat( dictionary, features, remove_NaN=True, remove_all_zeroes=True
                 append = False
         ### Append the data point if flagged for addition.
         if append:
+            '''
+            if wordsThere:
+                flattened_features = tmp_list
+                flattened_dict = dictionary[key]['word_data']
+                comb = np.concatenate((flattened_features, flattened_dict))
+                return_list.append( np.array(comb) )
+            else:
+                return_list.append( tmp_list )
+            '''
             return_list.append( np.array(tmp_list) )
 
     return np.array(return_list)

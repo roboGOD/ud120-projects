@@ -134,7 +134,7 @@ def email_preprocessor(data_dict, word_data_path="email_data.pkl"):
 	########################################################################
 	### Perform Some Cleaning here!!!!
 
-	selector = SelectPercentile(f_classif, percentile=50)
+	selector = SelectPercentile(f_classif, percentile=10)
 	selector.fit(words_transformed, pois)
 	words_transformed = selector.transform(words_transformed).toarray()
 
@@ -161,8 +161,8 @@ def email_preprocessor(data_dict, word_data_path="email_data.pkl"):
 	######################################################################
 
 	out_dict = {}
-	for i,j in enumerate(authors):
-		out_dict[j] = words_transformed[i]
+	for i,j in enumerate(words_transformed):
+		out_dict[authors[i]] = j
 
 
 	pickle_out = open("emails_preprocessed.pkl", "wb")

@@ -8,6 +8,7 @@ sys.path.append("../tools/")
 from feature_format import featureFormat, targetFeatureSplit
 from tester import dump_classifier_and_data
 from poi_email_preprocess import dump_email_data, email_preprocessor
+import numpy as np
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
@@ -24,15 +25,17 @@ features_list = ['poi', 'salary', 'bonus', 'total_payments', 'exercised_stock_op
 'expenses','deferred_income','long_term_incentive', 'poi_interactions', 'shared_receipt_with_poi']
 
 
-
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
 ### Fetch and Preprocess Email Data
-#dump_email_data(data_dict)
-email_preprocessor(data_dict=data_dict)
 
+#dump_email_data(data_dict)
+#email_preprocessor(data_dict=data_dict)
+
+with open("emails_preprocessed.pkl", "rb") as fOpen:
+    emails_preprocessed = pickle.load(fOpen)
 
 ### Task 2: Remove outliers
 data_dict.pop("TOTAL",0)
@@ -41,12 +44,21 @@ data_dict.pop("TOTAL",0)
 #import numpy as np 
 to_pois = []
 from_pois = []
-for key in data_dict:
+words_from_emails = []
+for key in sorted(data_dict.keys()):
     #print "\n",key, "\n"
+    prev = emails_preprocessed['DERRICK JR. JAMES V']
+    if key in emails_preprocessed:
+        data_dict[key]['word_data'] = emails_preprocessed[key]
+        words_from_emails.append(emails_preprocessed[key])
+    else:
+        data_dict[key]['word_data'] = prev
+        words_from_emails.append(prev)
     for feature in data_dict[key]:
         #print "\t",feature,":",data_dict[key][feature]
-        if data_dict[key][feature] < 0:
-            data_dict[key][feature] = (-1)*data_dict[key][feature]
+        if feature != 'word_data':
+            if data_dict[key][feature] < 0:
+                data_dict[key][feature] = (-1)*data_dict[key][feature]
 
 
     from_poi = data_dict[key]['from_poi_to_this_person']
@@ -78,6 +90,7 @@ for key in data_dict:
     #print to_poi, ":", to_ratio
     #print from_poi, ":", from_ratio
 
+
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler()
 transformed_to_pois = scaler.fit_transform(to_pois)
@@ -93,15 +106,15 @@ for key in data_dict:
 
 
 
-
-
-
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict
 
 ### Extract features and labels from dataset for local testing
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
+
+features = np.concatenate((features, np.array(words_from_emails)), axis=1)
+#print len(features[0])
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
@@ -132,7 +145,7 @@ from sklearn.pipeline import Pipeline
 
 
 
-n_comp = 5
+n_comp = 9000
 classifier = GaussianNB()
 classifier_name = 'gnb'
 estimators = [('reduce_dim', PCA(n_components=n_comp)), (classifier_name, classifier)]
@@ -158,6 +171,7 @@ pipe = Pipeline(estimators)
 ### Parameters for AdaBoostClassifier
 #pipe.set_params(adb__n_estimators=50)
 
+#clf = GaussianNB()
 clf = pipe
 
 
